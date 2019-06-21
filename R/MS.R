@@ -43,7 +43,7 @@ model_selection<-function(data=NULL, name_dir=NULL, name_results=NULL){ #data=X|
 
 
   for(i in 1:n) {#for each variable
-    print(c("variable ", var_names[i]))
+    #print(c("variable ", var_names[i]))
     j<-which(colnames(data)==var_names[i]) #column in file corresponding to var i
     Y<-as.numeric(data[,j]) #define variable Y
     X2<-X**2
@@ -52,8 +52,8 @@ model_selection<-function(data=NULL, name_dir=NULL, name_results=NULL){ #data=X|
                  list(a=summary(stats::lm(Y~X+X2))$coefficients[1], b=summary(stats::lm(Y~X+X2))$coefficients[2], c=summary(stats::lm(Y~X+X2))$coefficients[3]), #quadratic
                  list(a=summary(stats::lm(Y~X+X2+X3))$coefficients[1], b=summary(stats::lm(Y~X+X2+X3))$coefficients[2], c=summary(stats::lm(Y~X+X2+X3))$coefficients[3], d=summary(stats::lm(Y~X+X2+X3))$coefficients[4]), #cubic
                  list(a=mean(Y[which(X==max(X))]), b=1/stats::sd(X), X0=mean(X)), #logistic
-                 list(a=abs(min(Y)), b=log(max(abs(Y[which(X==max(X))]))/abs(min(Y)))/max(X)), #exponential growth
-                 list(a=exp(log(max(Y))-log(max(Y)/max(0.0001, min(Y)))*log(X[N])), b=log(max(Y)/max(0.0001, min(Y))), c=min(Y)), #power
+                 list(a=max(0.001, abs(min(Y))), b=log(max(abs(Y[which(X==max(X))]))/max(abs(min(Y)), 0.001))/max(X)), #exponential growth
+                 list(a=max(0.0001, exp(log(max(Y))-log(max(Y)/max(0.0001, min(Y)))*log(X[N]))), b=log(max(Y)/max(0.0001, min(Y))), c=max(0.0001, min(Y))), #power
                  list(a=sign(Y[which.max(abs(Y))])*max(abs(Y)), b=mean(X)), #monod
                  list(a=sign(Y[which.max(abs(Y))])*mean(abs(Y[which(X==X[1])])), b=mean(X[1])**2, c=mean(Y)), #haldane
                  list(a=X[N]+2, b=sign(mean(Y[which(X==X[N])])-mean(Y[which(X==X[1])]))*1/stats::sd(Y)), X0=mean(Y)) #logit
@@ -164,8 +164,8 @@ func<-function(mod, X, Y, name_mod, k=2, SST, N, file_name=NULL, form=NULL, make
     p=-1
     if(!is.na(stats::var(residuals)) & stats::var(residuals)>0){
       p=stats::shapiro.test(residuals)$p.value
-      if(p>=0.05) {a="norm";b}
-      if(p<0.05) {a="no-norm";b}
+      if(p>=0.05) {a="norm";b=1}
+      if(p<0.05) {a="no-norm";b=0}
     }
     cat("\n residuals distr: ", a, " p-value: ", p, " \n", file=file_name, sep='', append=TRUE)
     list(AIC_val=AIC_val, RSE_val=RSE_val, R2_val=R2_val, norm=b)
